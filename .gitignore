@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+
+### Selenium Testing ###
+**/src/test/java/com/example/produktapi/SeleniumTests.java

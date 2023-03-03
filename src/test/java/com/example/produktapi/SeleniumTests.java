@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ProduktapiApplicationFrontEndTests {
+public class SeleniumTests {
 
     private static WebDriver driver;
 
