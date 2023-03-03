@@ -274,6 +274,8 @@ public class SeleniumTests {
 
         assertEquals("12.99", price);
 
+        String name = "";
+
     }
 
     @Test
