@@ -274,6 +274,5 @@ class ProductServiceTest {
         verifyNoMoreInteractions(productRepository);
         assertEquals("Produkt med id " + inputId + " hittades inte", exception.getMessage());
 
-
     }
 }
