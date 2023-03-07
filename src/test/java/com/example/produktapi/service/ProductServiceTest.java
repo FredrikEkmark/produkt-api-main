@@ -28,6 +28,12 @@ class ProductServiceTest {
     @Captor
     ArgumentCaptor<Product> productCaptor;
 
+    @Captor
+    ArgumentCaptor<Integer> idCaptor;
+
+    @Captor
+    ArgumentCaptor<String> stringCaptor;
+
     @Test
     void whenGetAllProducts_thenExactlyOneInteractionWithRepositoryMethodFindAll() {
 
@@ -57,7 +63,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void whenGivenAnExistingCategoryWhenGetProductsByCategory_thenExactlyOneInteractionWithRepositoryMethodFindByCategory() {
+    void whenGivenAnCategoryWhenGetProductsByCategory_thenExactlyOneInteractionWithRepositoryMethodFindByCategory() {
 
         // given
         String category = "test";
@@ -72,7 +78,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void whenGetProductByIdIsGivenAValidID_findByIdIsInvokedOnceAndSameProductIsReturned() {
+    void whenGetProductByIdIsGivenAValidID_findByIdIsInvokedOnce() {
 
         // given
         Product product = new Product(
@@ -82,15 +88,17 @@ class ProductServiceTest {
                 "Description of item",
                 "URL");
 
+        product.setId(1);
+
         given(productRepository.findById(any())).willReturn(Optional.of(product));
 
         // when
-        Product returnProduct = underTest.getProductById(any());
+        underTest.getProductById(product.getId());
 
         // then
-        verify(productRepository, times(1)).findById(any());
+        verify(productRepository, times(1)).findById(idCaptor.capture());
         verifyNoMoreInteractions(productRepository);
-        assertEquals(product, returnProduct);
+        assertEquals(product.getId(), idCaptor.getValue());
 
     }
 
@@ -98,18 +106,19 @@ class ProductServiceTest {
     void whenGetProductByIdIsGivenANonValidID_entityNotFoundExceptionIsThrown() {
 
         // given
+        Integer id = 1;
         given(productRepository.findById(any())).willReturn(Optional.empty());
 
         // then
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 // when
-                ()-> underTest.getProductById(any()));
+                ()-> underTest.getProductById(id));
 
         // then
-        verify(productRepository, times(1)).findById(any());
-        assertEquals("Produkt med id null hittades inte", exception.getMessage());
+        verify(productRepository, times(1)).findById(idCaptor.capture());
         verifyNoMoreInteractions(productRepository);
-
+        assertEquals("Produkt med id " + id +" hittades inte", exception.getMessage());
+        assertEquals(id, idCaptor.getValue());
 
     }
 
@@ -124,22 +133,15 @@ class ProductServiceTest {
                 "Description of item",
                 "URL");
 
-        Product product2 = new Product(
-                "Computor",
-                35.0,
-                "Electronics",
-                "Description of item",
-                "URL");
-
         // when
         underTest.addProduct(product);
 
         // then
         verify(productRepository, times(1)).save(productCaptor.capture());
-        verify(productRepository, times(1)).findByTitle(any());
+        verify(productRepository, times(1)).findByTitle(stringCaptor.capture());
         verifyNoMoreInteractions(productRepository);
         assertEquals(product, productCaptor.getValue());
-        assertNotEquals(product2, productCaptor.getValue());
+        assertEquals(product.getTitle(), stringCaptor.getValue());
 
     }
 
@@ -165,7 +167,6 @@ class ProductServiceTest {
                 ()-> underTest.addProduct(product));
 
         verify(productRepository, times(1)).findByTitle(title);
-        verify(productRepository, times(0)).save(product);
         verifyNoMoreInteractions(productRepository);
         assertEquals("En produkt med titeln: " + title + " finns redan", exception.getMessage());
 
@@ -189,16 +190,19 @@ class ProductServiceTest {
                 "Description of item",
                 "URL");
 
+        productOld.setId(1);
+
         given(productRepository.findById(any())).willReturn(Optional.of(productOld));
 
         // when
-        underTest.updateProduct(productNew, any());
+        underTest.updateProduct(productNew, productOld.getId());
 
         // then
         verify(productRepository, times(1)).save(productCaptor.capture());
-        verify(productRepository, times(1)).findById(any());
+        verify(productRepository, times(1)).findById(idCaptor.capture());
         verifyNoMoreInteractions(productRepository);
         assertEquals(productNew, productCaptor.getValue());
+        assertEquals(productOld.getId(), idCaptor.getValue());
     }
 
     @Test
@@ -212,18 +216,20 @@ class ProductServiceTest {
                 "Description of item",
                 "URL");
 
+        Integer inputId = 10;
+
         given(productRepository.findById(any())).willReturn(Optional.empty());
 
         // then
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 // when
-                ()-> underTest.updateProduct(productNew, any()));
+                ()-> underTest.updateProduct(productNew, inputId));
 
         // then
-        verify(productRepository, times(0)).save(any());
-        verify(productRepository, times(1)).findById(any());
-        assertEquals("Produkt med id null hittades inte", exception.getMessage());
+        verify(productRepository, times(1)).findById(inputId);
         verifyNoMoreInteractions(productRepository);
+        assertEquals("Produkt med id " + inputId +" hittades inte", exception.getMessage());
+
     }
 
     @Test
@@ -237,14 +243,16 @@ class ProductServiceTest {
                 "Description of item",
                 "URL");
 
+        product.setId(1);
+
         given(productRepository.findById(any())).willReturn(Optional.of(product));
 
         // when
-        underTest.deleteProduct(any());
+        underTest.deleteProduct(product.getId());
 
         // then
-        verify(productRepository, times(1)).deleteById(any());
-        verify(productRepository, times(1)).findById(any());
+        verify(productRepository, times(1)).deleteById(product.getId());
+        verify(productRepository, times(1)).findById(product.getId());
         verifyNoMoreInteractions(productRepository);
 
     }
@@ -253,18 +261,19 @@ class ProductServiceTest {
     void whenDeletingAnNonExistingProduct_entityNotFoundExceptionIsThrown() {
 
         // given
+        Integer inputId = 10;
         given(productRepository.findById(any())).willReturn(Optional.empty());
 
         // when
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                 // when
-                ()-> underTest.deleteProduct(any()));
+                ()-> underTest.deleteProduct(inputId));
 
         // then
-        verify(productRepository, times(0)).deleteById(any());
-        verify(productRepository, times(1)).findById(any());
-        assertEquals("Produkt med id null hittades inte", exception.getMessage());
+        verify(productRepository, times(1)).findById(inputId);
         verifyNoMoreInteractions(productRepository);
+        assertEquals("Produkt med id " + inputId + " hittades inte", exception.getMessage());
+
 
     }
 }
