@@ -1,16 +1,12 @@
 package com.example.produktapi.repository;
 
 import com.example.produktapi.model.Product;
-
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -22,15 +18,19 @@ class ProductRepositoryTest {
     @Test
     void testingOurRepository_findAll() {
 
+        // given
+
+        // when
         List<Product> products = underTest.findAll();
 
+        // then
         assertFalse(products.isEmpty());
     }
 
     @Test
     void whenSearchingForAndExistingTitleWithFindByTitle_thenReturnThatProduct() {
 
-        //Given
+        // given
         String title = "En dator";
         underTest.save(new Product(
                 title,
@@ -39,50 +39,34 @@ class ProductRepositoryTest {
                 "bra att ha",
                 "url"));
 
-        // When
+        // when
         Optional<Product> optionalProduct = underTest.findByTitle(title);
 
-        //Then
-        // One way to write it
+        // then
         assertTrue(optionalProduct.isPresent());
-        assertFalse(optionalProduct.isEmpty());
         assertEquals(optionalProduct.get().getTitle(), title);
 
-        // Another way to write it
-        Assertions.assertAll(
-                ()-> assertTrue(optionalProduct.isPresent()),
-                ()-> assertFalse(optionalProduct.isEmpty()),
-                ()-> assertEquals(optionalProduct.get().getTitle(), title)
-        );
     }
 
     @Test
     void whenSearchingForANonExistingTitleWithFindByTitle_thenReturnAnEmptyOptional() {
 
-        //Given
+        // given
         String title = "En dator";
 
-        // When
+        // when
         Optional<Product> optionalProduct = underTest.findByTitle(title);
 
-        //Then
-        // One way to write it
-        assertFalse(optionalProduct.isPresent());
+        // then
         assertTrue(optionalProduct.isEmpty());
+        assertThrows(NoSuchElementException.class, optionalProduct::get);
 
-
-        // Another way to write it
-        Assertions.assertAll(
-                ()-> assertFalse(optionalProduct.isPresent()),
-                ()-> assertTrue(optionalProduct.isEmpty()),
-                ()-> assertThrows(NoSuchElementException.class, ()-> optionalProduct.get())
-        );
     }
 
     @Test
     void whenFindByCategoryIsCalledGivenAnExistingCategory_thenReturnListOfAllProductsWithThatCategory() {
 
-        //Given
+        // given
         String category = "electronics";
         underTest.save(new Product(
                 "En Dator",
@@ -91,31 +75,32 @@ class ProductRepositoryTest {
                 "bra att ha",
                 "url"));
 
-        // When
-        List<Product> categories = underTest.findByCategory(category);
+        // when
+        List<Product> products = underTest.findByCategory(category);
 
         // then
-        assertFalse(categories.isEmpty());
+        assertFalse(products.isEmpty());
+        assertEquals(category, products.get(0).getCategory());
 
     }
 
     @Test
     void whenFindByCategoryIsCalledGivenAnNonExistingCategory_thenReturnAnEmptyList() {
 
-        //Given
+        // given
         String category = "En Category som absolut inte finns 894kdu48wjs73kr846";
 
-        // When
+        // when
         List<Product> categories = underTest.findByCategory(category);
 
-        // Then
+        // then
         assertTrue(categories.isEmpty());
     }
 
     @Test
     void whenGetAllCategoriesIsCalled_returnListWithCategories() {
 
-        //Given
+        // given
         String category1 = "electronics";
         String category2 = "men's clothing";
         underTest.save(new Product(
@@ -132,14 +117,15 @@ class ProductRepositoryTest {
                 "Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve, your everyday",
                 "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"));
 
-        // When
+        // when
         List<String> categories = underTest.findAllCategories();
         int index1 = categories.indexOf(category1);
         int index2 = categories.indexOf(category2);
 
-        //Then
+        // then
         assertEquals(categories.get(index1), category1);
         assertEquals(categories.get(index2), category2);
+
     }
 
 }

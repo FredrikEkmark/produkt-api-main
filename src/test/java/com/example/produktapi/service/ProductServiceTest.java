@@ -7,15 +7,12 @@ import com.example.produktapi.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.BDDMockito.*;
-
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 
@@ -33,16 +30,22 @@ class ProductServiceTest {
 
     @Test
     void whenGetAllProducts_thenExactlyOneInteractionWithRepositoryMethodFindAll() {
+
+        // given
+
         // When
         underTest.getAllProducts();
 
         //Then
         verify(productRepository, times(1)).findAll();
         verifyNoMoreInteractions(productRepository);
+
     }
 
     @Test
     void whenGetAllCategories_thenExactlyOneInteractionWithRepositoryMethodFindAllCategories() {
+
+        // given
 
         // When
         underTest.getAllCategories();
@@ -56,13 +59,13 @@ class ProductServiceTest {
     @Test
     void whenGivenAnExistingCategoryWhenGetProductsByCategory_thenExactlyOneInteractionWithRepositoryMethodFindByCategory() {
 
-        //Given
+        // given
         String category = "test";
 
-        // When
+        // when
         underTest.getProductsByCategory(category);
 
-        //Then
+        // then
         verify(productRepository, times(1)).findByCategory(category);
         verifyNoMoreInteractions(productRepository);
 
@@ -86,7 +89,9 @@ class ProductServiceTest {
 
         // then
         verify(productRepository, times(1)).findById(any());
+        verifyNoMoreInteractions(productRepository);
         assertEquals(product, returnProduct);
+
     }
 
     @Test
@@ -102,11 +107,14 @@ class ProductServiceTest {
 
         // then
         verify(productRepository, times(1)).findById(any());
+        assertEquals("Produkt med id null hittades inte", exception.getMessage());
+        verifyNoMoreInteractions(productRepository);
+
 
     }
 
     @Test
-    void whenAddingAProduct_thenSaveMethodShouldBeInvokedOnce() {
+    void whenAddingAProduct_thenSaveMethodShouldBeInvokedOnceAndFindByTitleOnceAndTheSameProductUsedAsTheSaveParameterIsTheSameAsAddProduct() {
 
         // given
         Product product = new Product(
@@ -127,15 +135,16 @@ class ProductServiceTest {
         underTest.addProduct(product);
 
         // then
-        verify(productRepository).save(productCaptor.capture());
+        verify(productRepository, times(1)).save(productCaptor.capture());
         verify(productRepository, times(1)).findByTitle(any());
+        verifyNoMoreInteractions(productRepository);
         assertEquals(product, productCaptor.getValue());
         assertNotEquals(product2, productCaptor.getValue());
 
     }
 
     @Test
-    void whenAddingProductWithDuplicateTitle_thenThrowException() {
+    void whenAddingProductWithAlreadyExistingDuplicateTitle_thenThrowException() {
 
         // given
         String title = "Computor";
@@ -150,7 +159,6 @@ class ProductServiceTest {
 
         // when
 
-
         // then
         BadRequestException exception = assertThrows(BadRequestException.class,
                 // when
@@ -158,6 +166,7 @@ class ProductServiceTest {
 
         verify(productRepository, times(1)).findByTitle(title);
         verify(productRepository, times(0)).save(product);
+        verifyNoMoreInteractions(productRepository);
         assertEquals("En produkt med titeln: " + title + " finns redan", exception.getMessage());
 
     }
@@ -188,6 +197,7 @@ class ProductServiceTest {
         // then
         verify(productRepository, times(1)).save(productCaptor.capture());
         verify(productRepository, times(1)).findById(any());
+        verifyNoMoreInteractions(productRepository);
         assertEquals(productNew, productCaptor.getValue());
     }
 
@@ -202,7 +212,6 @@ class ProductServiceTest {
                 "Description of item",
                 "URL");
 
-
         given(productRepository.findById(any())).willReturn(Optional.empty());
 
         // then
@@ -210,10 +219,11 @@ class ProductServiceTest {
                 // when
                 ()-> underTest.updateProduct(productNew, any()));
 
-
         // then
         verify(productRepository, times(0)).save(any());
         verify(productRepository, times(1)).findById(any());
+        assertEquals("Produkt med id null hittades inte", exception.getMessage());
+        verifyNoMoreInteractions(productRepository);
     }
 
     @Test
@@ -235,6 +245,7 @@ class ProductServiceTest {
         // then
         verify(productRepository, times(1)).deleteById(any());
         verify(productRepository, times(1)).findById(any());
+        verifyNoMoreInteractions(productRepository);
 
     }
 
@@ -242,7 +253,6 @@ class ProductServiceTest {
     void whenDeletingAnNonExistingProduct_entityNotFoundExceptionIsThrown() {
 
         // given
-
         given(productRepository.findById(any())).willReturn(Optional.empty());
 
         // when
@@ -253,6 +263,8 @@ class ProductServiceTest {
         // then
         verify(productRepository, times(0)).deleteById(any());
         verify(productRepository, times(1)).findById(any());
+        assertEquals("Produkt med id null hittades inte", exception.getMessage());
+        verifyNoMoreInteractions(productRepository);
 
     }
 }
